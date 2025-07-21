@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Medal Tasks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, rgb(46, 53, 255), rgb(55, 255, 202));
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            padding: 10px;
+            width: 100%;
+            height: auto;
+            color: aliceblue;
+            background: rgb(113, 38, 225);
+            border-radius: 20px 20px 0 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 40%;
+            min-width: 300px;
+        }
+        .medal {
+            margin: -15px;
+        }
+        #taskInput {
+            margin: 10px;
+            padding: 10px;
+            flex: 1;
+            font-size: 16px;
+        }
+        .add {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .input, .head {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px 0;
+            flex-wrap: wrap;
+        }
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 0 0 20px 20px;
+            font-size: large;
+        }
+        .tasks div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            margin: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        #noTasksMessage {
+            text-align: center;
+            background: white;
+            padding: 10px;
+            border-radius: 0 0 20px 20px;
+            width: 100%;
+        }
+
+        /* ✅ Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+            }
+            header {
+                font-size: medium;
+                text-align: center;
+            }
+            .input {
+                flex-direction: column;
+            }
+            #taskInput, .add {
+                width: 90%;
+                margin: 5px;
+                font-size: 16px;
+            }
+            .tasks div {
+                flex-direction: column;
+                align-items: flex-start;
+                font-size: 18px;
+            }
+            .tasks div > div {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="head">
+                <h1><img src="medal.png" class="medal" alt="" width="40" height="40"> Gold Medal</h1>
+            </div>
+            <div class="input">
+                <input type="text" id="taskInput" placeholder="Enter new task..">
+                <button onclick="addTask()" class="add">Add</button>
+            </div>
+        </header>
+
+        <div class="tasks"></div>
+        <div id="noTasksMessage" class="no-tasks">No tasks yet!</div>
+
+        <script>
+            function updateNoTasksMessage() {
+                const tasksDiv = document.querySelector('.tasks');
+                const noTasksMessage = document.getElementById('noTasksMessage');
+                if (tasksDiv.children.length === 0) {
+                    tasksDiv.style.display = 'none';
+                    noTasksMessage.style.display = 'block';
+                } else {
+                    tasksDiv.style.display = 'flex';
+                    noTasksMessage.style.display = 'none';
+                }
+            }
+
+            function saveTasks() {
+                const tasks = [];
+                document.querySelectorAll('.tasks div').forEach(div => {
+                    const taskText = div.querySelector('span').textContent;
+                    const isDone = div.querySelector('.not-done').classList.contains('done');
+                    tasks.push({ text: taskText, done: isDone });
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+
+            function createTaskElement(taskText, isDone = false) {
+                const newDiv = document.createElement('div');
+
+                const taskSpan = document.createElement('span');
+                taskSpan.textContent = taskText;
+
+                const buttonBox = document.createElement('div');
+                buttonBox.style.display = 'flex';
+                buttonBox.style.gap = '10px';
+
+                const doneButton = document.createElement('button');
+                doneButton.textContent = isDone ? 'Done' : 'Not Done';
+                doneButton.classList.add('not-done');
+                doneButton.style.backgroundColor = isDone ? 'green' : 'red';
+                if (isDone) doneButton.classList.add('done');
+
+                doneButton.onclick = function () {
+                    doneButton.classList.toggle('done');
+                    const done = doneButton.classList.contains('done');
+                    doneButton.textContent = done ? 'Done' : 'Not Done';
+                    doneButton.style.backgroundColor = done ? 'green' : 'red';
+                    saveTasks();
+                };
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.onclick = function () {
+                    newDiv.remove();
+                    updateNoTasksMessage();
+                    saveTasks();
+                };
+
+                buttonBox.appendChild(doneButton);
+                buttonBox.appendChild(removeButton);
+
+                newDiv.appendChild(taskSpan);
+                newDiv.appendChild(buttonBox);
+
+                newDiv.ondblclick = function () {
+                    newDiv.remove();
+                    updateNoTasksMessage();
+                    saveTasks();
+                };
+
+                return newDiv;
+            }
+
+            function loadTasks() {
+                const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+                const tasksDiv = document.querySelector('.tasks');
+                tasksDiv.innerHTML = "";
+                tasks.forEach(task => {
+                    const taskElement = createTaskElement(task.text, task.done);
+                    tasksDiv.appendChild(taskElement);
+                });
+                updateNoTasksMessage();
+            }
+
+            function addTask() {
+                const taskInput = document.getElementById('taskInput');
+                const taskValue = taskInput.value.trim();
+                if (taskValue !== "") {
+                    const tasksDiv = document.querySelector('.tasks');
+                    const taskElement = createTaskElement(taskValue);
+                    tasksDiv.appendChild(taskElement);
+                    taskInput.value = "";
+                    updateNoTasksMessage();
+                    saveTasks();
+                }
+            }
+
+            loadTasks();
+        </script>
+    </div>
+</body>
+</html>
