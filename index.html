@@ -80,8 +80,6 @@
             border-radius: 0 0 20px 20px;
             width: 100%;
         }
-
-        /* ✅ Responsive adjustments */
         @media (max-width: 768px) {
             .container {
                 width: 90%;
@@ -124,12 +122,12 @@
             </div>
         </header>
 
-        <div class="tasks"></div>
+        <div class="tasks" id="tasks"></div>
         <div id="noTasksMessage" class="no-tasks">No tasks yet!</div>
 
         <script>
             function updateNoTasksMessage() {
-                const tasksDiv = document.querySelector('.tasks');
+                const tasksDiv = document.getElementById('tasks');
                 const noTasksMessage = document.getElementById('noTasksMessage');
                 if (tasksDiv.children.length === 0) {
                     tasksDiv.style.display = 'none';
@@ -142,9 +140,9 @@
 
             function saveTasks() {
                 const tasks = [];
-                document.querySelectorAll('.tasks div').forEach(div => {
+                document.querySelectorAll('#tasks .task').forEach(div => {
                     const taskText = div.querySelector('span').textContent;
-                    const isDone = div.querySelector('.not-done').classList.contains('done');
+                    const isDone = div.classList.contains('done');
                     tasks.push({ text: taskText, done: isDone });
                 });
                 localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -152,6 +150,8 @@
 
             function createTaskElement(taskText, isDone = false) {
                 const newDiv = document.createElement('div');
+                newDiv.classList.add('task');
+                if (isDone) newDiv.classList.add('done');
 
                 const taskSpan = document.createElement('span');
                 taskSpan.textContent = taskText;
@@ -162,13 +162,11 @@
 
                 const doneButton = document.createElement('button');
                 doneButton.textContent = isDone ? 'Done' : 'Not Done';
-                doneButton.classList.add('not-done');
                 doneButton.style.backgroundColor = isDone ? 'green' : 'red';
-                if (isDone) doneButton.classList.add('done');
 
                 doneButton.onclick = function () {
-                    doneButton.classList.toggle('done');
-                    const done = doneButton.classList.contains('done');
+                    newDiv.classList.toggle('done');
+                    const done = newDiv.classList.contains('done');
                     doneButton.textContent = done ? 'Done' : 'Not Done';
                     doneButton.style.backgroundColor = done ? 'green' : 'red';
                     saveTasks();
@@ -199,7 +197,7 @@
 
             function loadTasks() {
                 const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-                const tasksDiv = document.querySelector('.tasks');
+                const tasksDiv = document.getElementById('tasks');
                 tasksDiv.innerHTML = "";
                 tasks.forEach(task => {
                     const taskElement = createTaskElement(task.text, task.done);
@@ -212,7 +210,7 @@
                 const taskInput = document.getElementById('taskInput');
                 const taskValue = taskInput.value.trim();
                 if (taskValue !== "") {
-                    const tasksDiv = document.querySelector('.tasks');
+                    const tasksDiv = document.getElementById('tasks');
                     const taskElement = createTaskElement(taskValue);
                     tasksDiv.appendChild(taskElement);
                     taskInput.value = "";
